@@ -1,65 +1,205 @@
-import Image from "next/image";
+'use client';
+
+/**
+ * Scaffold verification homepage.
+ * Drop in at `app/page.tsx`. On first build it runs live checks and confirms the
+ * stack is wired correctly. REPLACE THIS FILE with your real homepage once green.
+ */
+
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+import { motion } from 'motion/react';
+import Lenis from 'lenis';
+
+type Status = 'checking' | 'ok' | 'warn' | 'fail';
+type Group = 'Environment' | 'Animation' | 'SEO routes' | 'System';
+type Check = { label: string; group: Group; status: Status; detail?: string };
+
+// NEXT_PUBLIC_* vars are inlined at build time, so reference them statically.
+const ENV: Record<string, string | undefined> = {
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME,
+  NEXT_PUBLIC_SITE_DESCRIPTION: process.env.NEXT_PUBLIC_SITE_DESCRIPTION,
+  NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+  NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+};
+
+const INITIAL: Check[] = [
+  { label: 'NEXT_PUBLIC_SITE_URL', group: 'Environment', status: 'checking' },
+  { label: 'NEXT_PUBLIC_SITE_NAME', group: 'Environment', status: 'checking' },
+  { label: 'NEXT_PUBLIC_SITE_DESCRIPTION', group: 'Environment', status: 'checking' },
+  { label: 'NEXT_PUBLIC_GA_ID (optional)', group: 'Environment', status: 'checking' },
+  { label: 'GSAP + ScrollTrigger', group: 'Animation', status: 'checking' },
+  { label: 'Lenis smooth scroll', group: 'Animation', status: 'checking' },
+  { label: 'Motion (Framer Motion)', group: 'Animation', status: 'checking' },
+  { label: 'prefers-reduced-motion', group: 'System', status: 'checking' },
+  { label: 'Web fonts loaded', group: 'System', status: 'checking' },
+  { label: '/robots.txt', group: 'SEO routes', status: 'checking' },
+  { label: '/sitemap.xml', group: 'SEO routes', status: 'checking' },
+  { label: '/llms.txt', group: 'SEO routes', status: 'checking' },
+];
 
 export default function Home() {
+  const [checks, setChecks] = useState<Check[]>(INITIAL);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const set = (label: string, status: Status, detail?: string) =>
+    setChecks((prev) =>
+      prev.map((c) => (c.label === label ? { ...c, status, detail } : c)),
+    );
+
+  // GSAP confirms by running a staggered reveal on the rows.
+  useGSAP(
+    () => {
+      try {
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.from('.scaffold-row', {
+          opacity: 0,
+          y: 8,
+          stagger: 0.03,
+          duration: 0.4,
+          ease: 'power2.out',
+        });
+        set('GSAP + ScrollTrigger', 'ok', 'registered + tween ran');
+      } catch (e) {
+        set('GSAP + ScrollTrigger', 'fail', String(e));
+      }
+    },
+    { scope: containerRef },
+  );
+
+  useEffect(() => {
+    // Motion: reaching this effect means the import + render succeeded.
+    set('Motion (Framer Motion)', 'ok', 'rendered');
+
+    // Lenis
+    let lenis: Lenis | null = null;
+    try {
+      lenis = new Lenis();
+      const raf = (time: number) => {
+        lenis?.raf(time);
+        requestAnimationFrame(raf);
+      };
+      requestAnimationFrame(raf);
+      lenis.on('scroll', ScrollTrigger.update);
+      set('Lenis smooth scroll', 'ok', 'instance + RAF active');
+    } catch (e) {
+      set('Lenis smooth scroll', 'fail', String(e));
+    }
+
+    // Environment
+    set('NEXT_PUBLIC_SITE_URL', ENV.NEXT_PUBLIC_SITE_URL ? 'ok' : 'fail',
+      ENV.NEXT_PUBLIC_SITE_URL ?? 'missing — set in .env.local');
+    set('NEXT_PUBLIC_SITE_NAME', ENV.NEXT_PUBLIC_SITE_NAME ? 'ok' : 'fail',
+      ENV.NEXT_PUBLIC_SITE_NAME ?? 'missing');
+    set('NEXT_PUBLIC_SITE_DESCRIPTION', ENV.NEXT_PUBLIC_SITE_DESCRIPTION ? 'ok' : 'fail',
+      ENV.NEXT_PUBLIC_SITE_DESCRIPTION ?? 'missing');
+    set('NEXT_PUBLIC_GA_ID (optional)', ENV.NEXT_PUBLIC_GA_ID ? 'ok' : 'warn',
+      ENV.NEXT_PUBLIC_GA_ID ? 'set' : 'blank — analytics will no-op (fine in dev)');
+
+    // System
+    try {
+      const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+      set('prefers-reduced-motion', 'ok', rm.matches ? 'reduce' : 'no-preference');
+    } catch {
+      set('prefers-reduced-motion', 'warn', 'matchMedia unavailable');
+    }
+    if (typeof document !== 'undefined' && 'fonts' in document) {
+      document.fonts.ready.then(() => set('Web fonts loaded', 'ok', 'fonts ready'));
+    } else {
+      set('Web fonts loaded', 'warn', 'Font Loading API unavailable');
+    }
+
+    // SEO routes — warn (not fail) if missing, since they may not be generated yet.
+    (['/robots.txt', '/sitemap.xml', '/llms.txt'] as const).forEach(async (route) => {
+      try {
+        const res = await fetch(route, { cache: 'no-store' });
+        set(route, res.ok ? 'ok' : 'warn',
+          res.ok ? `${res.status} OK` : `${res.status} — not generated yet?`);
+      } catch {
+        set(route, 'warn', 'unreachable');
+      }
+    });
+
+    return () => lenis?.destroy();
+  }, []);
+
+  const hasFail = checks.some((c) => c.status === 'fail');
+  const stillChecking = checks.some((c) => c.status === 'checking');
+  const overall: Status = hasFail ? 'fail' : stillChecking ? 'checking' : 'ok';
+
+  const headline =
+    overall === 'fail' ? 'Setup incomplete'
+    : overall === 'checking' ? 'Running checks…'
+    : 'Scaffold ready';
+
+  const groups: Group[] = ['Environment', 'Animation', 'SEO routes', 'System'];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-dvh bg-neutral-950 text-neutral-100 flex items-center justify-center p-6">
+      <div ref={containerRef} className="w-full max-w-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-8 backdrop-blur"
+        >
+          <div className="flex items-center gap-3">
+            <Dot status={overall} large />
+            <h1 className="text-xl font-semibold tracking-tight">{headline}</h1>
+          </div>
+          <p className="mt-2 text-sm text-neutral-400">
+            {overall === 'ok'
+              ? 'Every system is wired correctly. Replace app/page.tsx with your real homepage.'
+              : 'This page verifies the scaffold. Fix anything red, then replace it with your content.'}
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+          <div className="mt-6 space-y-5">
+            {groups.map((group) => (
+              <div key={group}>
+                <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-neutral-500">
+                  {group}
+                </h2>
+                <ul className="space-y-1.5">
+                  {checks.filter((c) => c.group === group).map((c) => (
+                    <li
+                      key={c.label}
+                      className="scaffold-row flex items-center justify-between gap-4 rounded-lg px-3 py-2 text-sm odd:bg-neutral-900/40"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Dot status={c.status} />
+                        <span className="font-mono text-[13px] text-neutral-200">{c.label}</span>
+                      </span>
+                      {c.detail && (
+                        <span className="truncate text-right text-xs text-neutral-500">{c.detail}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+        <p className="mt-4 text-center text-xs text-neutral-600">
+          Crazy Creative Design · scaffold self-check
+        </p>
+      </div>
+    </main>
+  );
+}
+
+function Dot({ status, large }: { status: Status; large?: boolean }) {
+  const color =
+    status === 'ok' ? 'bg-emerald-400'
+    : status === 'warn' ? 'bg-amber-400'
+    : status === 'fail' ? 'bg-rose-400'
+    : 'bg-neutral-500 animate-pulse';
+  return (
+    <span
+      aria-hidden
+      className={`inline-block rounded-full ${color} ${large ? 'h-3 w-3' : 'h-2 w-2'}`}
+    />
   );
 }

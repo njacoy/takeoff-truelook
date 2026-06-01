@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Website Starter Kit
 
-## Getting Started
+Opinionated scaffold for award-caliber, animation-heavy **Next.js landing pages**.
+Follow the binding rules in [`CLAUDE.md`](./CLAUDE.md); the full launch checklist
+lives in [`docs/website-scaffolding-checklist.md`](./docs/website-scaffolding-checklist.md).
 
-First, run the development server:
+## Stack (locked)
+
+| Concern              | Choice                                   |
+| -------------------- | ---------------------------------------- |
+| Framework            | Next.js (App Router) + TypeScript strict |
+| Package manager      | **pnpm** (never npm/yarn)                |
+| Styling              | Tailwind v4 + CSS Modules                |
+| Scroll animation     | GSAP + ScrollTrigger (via `useGSAP`)     |
+| Component transitions| Motion (Framer Motion)                   |
+| Smooth scroll        | Lenis (single RAF, synced to GSAP)       |
+| SVG                  | SVGR + SVGO                              |
+| Hosting              | Vercel                                   |
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # fill in NEXT_PUBLIC_SITE_URL/NAME/DESCRIPTION
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The default `app/page.tsx`
+is a **scaffold self-check** — it verifies env vars, animation libs, fonts, and
+SEO routes (`/robots.txt`, `/sitemap.xml`, `/llms.txt`). Replace it with your
+real homepage once everything is green.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm dev      # local dev (Turbopack)
+pnpm build    # production build
+pnpm lint     # eslint
+```
 
-## Learn More
+## What's wired up
 
-To learn more about Next.js, take a look at the following resources:
+- **Animation:** `app/providers/SmoothScrollProvider.tsx` sets up a single RAF
+  loop — Lenis driven by GSAP's ticker, with ScrollTrigger updates and
+  `prefers-reduced-motion` disabling smooth scroll.
+- **SEO:** `site.config.ts` is the single source. `app/robots.ts`,
+  `app/sitemap.ts`, `app/llms.txt/route.ts`, and `app/opengraph-image.tsx` all
+  derive from `NEXT_PUBLIC_SITE_URL`.
+- **Analytics:** `components/Analytics.tsx` no-ops when `NEXT_PUBLIC_GA_ID` /
+  `NEXT_PUBLIC_GTM_ID` are empty — keeps dev/staging clean.
+- **SVGR:** `*.svg` imports become React components (Turbopack + Webpack
+  configured in `next.config.ts`).
+- **Tokens:** CSS custom properties in `app/globals.css` (OKLCH brand scale,
+  easing, durations, fluid type via `clamp(rem + vw)`).
+- **Placeholders:** `<Placeholder />` in `components/` reserves aspect ratio
+  and is greppable by `data-placeholder` / `TODO: placeholder asset`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Before launch
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Replace `app/page.tsx` with the real homepage.
+- Replace every `<Placeholder />` and `TODO: placeholder asset` with real media.
+- Fill `.env.local`; ensure `NEXT_PUBLIC_SITE_URL` is the production canonical.
+- Decide the AI-crawler policy in `app/robots.ts` (currently **allow all**).
+- If targeting EU/UK with GA/GTM, add a consent banner + Consent Mode v2.
+- Run Lighthouse mobile; meet the targets in `CLAUDE.md`.

@@ -1,0 +1,80 @@
+/* ==========================================================================
+   TrueLook — Color Tokens
+   Source: TrueLook Brand Standards v1.0 (June 2024) — Web Colors
+   Web use only (not print). Hex values transcribed from brand guidelines.
+   ========================================================================== */
+
+:root {
+  /* --------------------------------------------------------------------
+     PRIMITIVES — raw brand palette. Don't use directly in components;
+     reference through semantic tokens below.
+     -------------------------------------------------------------------- */
+
+  /* Primary */
+  --tl-jobsite-green:   #5AB855;  /* rgb(90 183 85) */
+  --tl-project-green:   #44A13F;  /* rgb(68 160 63) */
+  --tl-hard-hat-white:  #FFFFFF;  /* rgb(255 255 255) */
+
+  /* Secondary */
+  --tl-dashboard-green: #004F32;  /* rgb(0 79 50) */
+  --tl-lens-black:      #060A15;  /* rgb(6 10 21) */
+  --tl-steel-gray:      #40444F;  /* rgb(64 68 79) */
+  --tl-alert-orange:    #FF9140;  /* rgb(255 144 64) */
+  --tl-powder-blue:     #EEF9FD;  /* rgb(238 249 253) */
+  --tl-solar-cyan:      #53C8EB;  /* rgb(83 199 234) */
+  --tl-collar-blue:     #3C93FC;  /* rgb(60 146 251) */
+  --tl-blueprint-blue:  #2C76CE;  /* rgb(44 118 205) */
+
+  /* --------------------------------------------------------------------
+     SEMANTIC TOKENS — what components actually consume.
+     Usage ratios per brand: ~30% white, ~30% greens,
+     ~15% orange (CTAs/highlights only), ~25% supporting tones.
+     -------------------------------------------------------------------- */
+
+  /* Surfaces */
+  --color-bg:                 var(--tl-hard-hat-white); /* default page bg */
+  --color-bg-subtle:          var(--tl-powder-blue);    /* tinted sections, cards */
+  --color-bg-inverse:         var(--tl-lens-black);     /* dark sections, footer */
+  --color-bg-brand:           var(--tl-dashboard-green);/* deep brand sections */
+
+  /* Text */
+  --color-text:               var(--tl-lens-black);     /* body on light */
+  --color-text-secondary:     var(--tl-steel-gray);     /* captions, meta */
+  --color-text-inverse:       var(--tl-hard-hat-white); /* text on dark/brand */
+  --color-text-brand:         var(--tl-project-green);  /* brand-colored headings/eyebrows */
+  --color-text-link:          var(--tl-blueprint-blue);
+
+  /* Brand / accents */
+  --color-brand:              var(--tl-jobsite-green);
+  --color-brand-strong:       var(--tl-project-green);
+  --color-brand-deep:         var(--tl-dashboard-green);
+  --color-accent:             var(--tl-alert-orange);   /* minimal use: CTAs + key highlights */
+  --color-info:               var(--tl-solar-cyan);
+  --color-info-strong:        var(--tl-collar-blue);
+
+  /* Interactive */
+  --color-cta-bg:             var(--tl-alert-orange);
+  --color-cta-text:           var(--tl-lens-black);
+  --color-button-primary-bg:  var(--tl-project-green);
+  --color-button-primary-text:var(--tl-hard-hat-white);
+  --color-button-secondary-border: var(--tl-steel-gray);
+  --color-focus-ring:         var(--tl-collar-blue);
+
+  /* Borders & lines */
+  --color-border:             color-mix(in srgb, var(--tl-steel-gray) 30%, transparent);
+  --color-border-strong:      var(--tl-steel-gray);
+
+  /* Status (mapped from palette) */
+  --color-success:            var(--tl-project-green);
+  --color-warning:            var(--tl-alert-orange);
+
+  /* --------------------------------------------------------------------
+     GRADIENTS — analogous colors only (greens→greens, blues→blacks).
+     Never non-analogous (e.g., orange→blue). Adjust stops so the full
+     value of each color is visible (no edge-to-edge flow).
+     -------------------------------------------------------------------- */
+  --gradient-green:       linear-gradient(180deg, var(--tl-jobsite-green) 10%, var(--tl-dashboard-green) 90%);
+  --gradient-green-dark:  linear-gradient(180deg, var(--tl-dashboard-green) 10%, var(--tl-lens-black) 90%);
+  --gradient-blue-dark:   linear-gradient(180deg, var(--tl-blueprint-blue) 10%, var(--tl-lens-black) 90%);
+  --gradient-gray-dark:   linear-gradient(180deg, var(--tl-steel-gray) 10%, var(--tl-lens-black) 90%);
+}

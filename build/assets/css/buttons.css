@@ -1,0 +1,139 @@
+/* ==========================================================================
+   TrueLook — Button Components
+   Requires: tokens.css, typography.css
+   Two patterns from reference:
+   1. .btn-marker — solid button with small square "bullet" marker before label
+   2. .btn-chip   — quiet button with square icon chip appended after label
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Base — all buttons share one height
+   -------------------------------------------------------------------------- */
+:root {
+  --btn-height: 56px;
+  --btn-height-sm: 44px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--btn-height);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem; /* 17 */
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  text-decoration: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #3C93FC);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   1. Marker button — dark fill, square marker before label
+      <button class="btn btn-marker">Request expert guidance</button>
+   -------------------------------------------------------------------------- */
+.btn-marker {
+  background: var(--tl-lens-black, #060A15);
+  color: var(--tl-hard-hat-white, #FFFFFF);
+  padding: 0 32px 0 24px;
+}
+
+.btn-marker::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex: none;
+  background: var(--tl-alert-orange, #FF9140);
+  transition: transform 160ms ease;
+}
+
+.btn-marker:hover { background: var(--tl-dashboard-green, #004F32); }
+.btn-marker:hover::before { transform: rotate(90deg); }
+
+/* Green-fill variant for primary brand moments */
+.btn-marker--green {
+  background: var(--tl-project-green, #44A13F);
+}
+.btn-marker--green:hover { background: var(--tl-dashboard-green, #004F32); }
+
+/* Compact size */
+.btn--sm { height: var(--btn-height-sm); font-size: 0.9375rem; }
+
+/* --------------------------------------------------------------------------
+   2. Chip button — quiet fill, square "+" chip after label
+      <button class="btn btn-chip">Know more <span class="btn-chip__icon">+</span></button>
+   -------------------------------------------------------------------------- */
+.btn-chip {
+  background: color-mix(in srgb, var(--tl-steel-gray, #40444F) 14%, transparent);
+  color: var(--tl-lens-black, #060A15);
+  padding: 0 10px 0 20px;
+  border-radius: 6px;
+  font-weight: var(--weight-semibold);
+}
+
+.btn-chip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--tl-steel-gray, #40444F) 32%, transparent);
+  font-size: 1.25rem;
+  font-weight: var(--weight-regular);
+  line-height: 1;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.btn-chip:hover { background: color-mix(in srgb, var(--tl-steel-gray, #40444F) 22%, transparent); }
+.btn-chip:hover .btn-chip__icon {
+  background: var(--tl-project-green, #44A13F);
+  color: var(--tl-hard-hat-white, #FFFFFF);
+  transform: rotate(90deg);
+}
+
+/* Dark-surface variant (for use on Lens Black / gradient sections) */
+.btn-chip--inverse {
+  background: color-mix(in srgb, var(--tl-hard-hat-white, #FFFFFF) 12%, transparent);
+  color: var(--tl-hard-hat-white, #FFFFFF);
+}
+.btn-chip--inverse .btn-chip__icon {
+  background: color-mix(in srgb, var(--tl-hard-hat-white, #FFFFFF) 22%, transparent);
+}
+.btn-chip--inverse:hover { background: color-mix(in srgb, var(--tl-hard-hat-white, #FFFFFF) 18%, transparent); }
+
+/* --------------------------------------------------------------------------
+   3. Mono variant — Geist Mono label, uppercase, tracked out
+      Combine with either pattern:
+      <button class="btn btn-marker btn--mono">Request expert guidance</button>
+      <button class="btn btn-chip btn--mono">Know more <span class="btn-chip__icon">+</span></button>
+   -------------------------------------------------------------------------- */
+.btn--mono {
+  font-family: var(--font-mono);
+  font-size: 0.875rem; /* 14 — mono runs wide, size down to match sans optically */
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.btn--mono .btn-chip__icon {
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn-marker::before, .btn-chip__icon { transition: none; }
+}
